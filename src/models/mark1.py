@@ -64,6 +64,20 @@ class Mark1Model:
         self.bank_liquidity = 0.0
         self.avg_price = 1.0
 
+        # Make initial employment consistent with initial production.
+        # With alpha = 1 and initial Y_i = 1, each firm should start with one worker.
+        initial_workers_needed = int(round(1.0 / self.config.alpha))
+
+        h = 0
+        for i in range(nf):
+            for _ in range(initial_workers_needed):
+                if h >= nh:
+                    break
+                self.firm_employees[i].append(h)
+                self.household_employer[h] = i
+                self.household_wage[h] = self.config.wage
+                h += 1
+
         self.history: dict[str, list[float]] = {
             "unemployment": [],
             "employment": [],
@@ -79,6 +93,9 @@ class Mark1Model:
             "bankruptcies": [],
         }
 
+        # Record true t=0 state before any dynamics
+        self.initial_total_money = self.total_money()
+        self._record_state(bad_debts=0.0, bankruptcies=0)
     # ------------------------------------------------------------------
     # Credit functions from the paper
     # ------------------------------------------------------------------
@@ -116,6 +133,20 @@ class Mark1Model:
     def firm_equity(self, i: int) -> float:
         return float(self.firm_liquidity[i] - self.firm_total_debt[i])
 
+    def total_money(self) -> float:
+
+            return float(
+
+                self.bank_liquidity
+
+                + np.sum(self.firm_liquidity)
+
+                + np.sum(self.household_wealth)
+
+                + self.owner_wealth
+
+            )
+            
     def average_price(self, firm_idx: Optional[np.ndarray] = None) -> float:
         if firm_idx is None:
             firm_idx = np.arange(self.config.n_firms)
@@ -128,7 +159,7 @@ class Mark1Model:
         return float(np.sum(self.firm_price[firm_idx] * sales) / denom)
 
     def total_household_wealth(self) -> float:
-        return float(np.sum(self.household_wealth) + self.owner_wealth)
+        return float(np.sum(self.household_wealth)) #don't include owner wealth
 
     def total_firm_liquidity(self) -> float:
         return float(np.sum(self.firm_liquidity))
@@ -432,6 +463,13 @@ class Mark1Model:
     # ------------------------------------------------------------------
 
     def _record_state(self, bad_debts: float, bankruptcies: int) -> None:
+        current_total_money = self.total_money()
+        if not np.isclose(current_total_money, self.initial_total_money, atol=1e-8):
+            raise RuntimeError(
+                f"Money conservation failed: current_total_money={current_total_money:.12f}, "
+                f"initial_total_money={self.initial_total_money:.12f}"
+            )
+            
         self.history["unemployment"].append(self.unemployment_rate())
         self.history["employment"].append(self.employment_rate())
         self.history["avg_price"].append(self.avg_price)

@@ -40,7 +40,10 @@ def main() -> None:
     print(f"  avg_price              = {history['avg_price'][0]:.6f}")
     print(f"  owner_wealth           = {history['owner_wealth'][0]:.6f}")
     print(f"  bank_liquidity         = {history['bank_liquidity'][0]:.6f}")
-    print(f"  total_household_wealth = {history['total_household_wealth'][0]:.6f}")
+    print(f"  working_household_wealth      = {history['total_household_wealth'][0]:.6f}")
+    print(
+    f"  total_money                   = "
+    f"{history['bank_liquidity'][0] + history['total_firm_liquidity'][0] + history['total_household_wealth'][0] + history['owner_wealth'][0]:.6f}")
     print(f"  total_firm_liquidity   = {history['total_firm_liquidity'][0]:.6f}")
     print(f"  total_firm_equity      = {history['total_firm_equity'][0]:.6f}")
     print()
@@ -51,7 +54,10 @@ def main() -> None:
     print(f"  avg_price              = {history['avg_price'][-1]:.6f}")
     print(f"  owner_wealth           = {history['owner_wealth'][-1]:.6f}")
     print(f"  bank_liquidity         = {history['bank_liquidity'][-1]:.6f}")
-    print(f"  total_household_wealth = {history['total_household_wealth'][-1]:.6f}")
+    print(f"  working_household_wealth      = {history['total_household_wealth'][-1]:.6f}")
+    print(
+    f"  total_money                   = "
+    f"{history['bank_liquidity'][-1] + history['total_firm_liquidity'][-1] + history['total_household_wealth'][-1] + history['owner_wealth'][-1]:.6f}")
     print(f"  total_firm_liquidity   = {history['total_firm_liquidity'][-1]:.6f}")
     print(f"  total_firm_equity      = {history['total_firm_equity'][-1]:.6f}")
     print(f"  total_output           = {history['total_output'][-1]:.6f}")
