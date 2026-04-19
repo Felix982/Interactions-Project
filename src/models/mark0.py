@@ -154,7 +154,7 @@ class Mark0Model:
 
             # Production and price update, Appendix B / Eq. (11)
             if y_i < d_i:
-                self.y[i] = y_i + min(cfg.eta_plus * (d_i - y_i), u_tilde[i])
+                self.y[i] = y_i + min(cfg.eta_plus * (d_i - y_i), self.config.mu * u_tilde[i])
                 if p_i < avg_price:
                     self.p[i] = p_i * (1.0 + cfg.gamma_p * self.rng.random())
 
@@ -286,6 +286,11 @@ class Mark0Model:
         """
         Revival block from Appendix B.
         Returns (added_deficit, number_of_revivals).
+        """
+
+        """
+        Careful: this is the pre-section 4 implementation. In section for they define an extension, 
+        search for 'When a firm is revived from bankruptcy...' for passage
         """
         deficit = 0.0
         revivals = 0
