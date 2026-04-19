@@ -16,6 +16,7 @@ class Mark0Config:
     f: float = 1.0
     gamma_w: float = 0.0  # 0.0 = fixed-wage basic Mark 0; >0 enables wage update extension
     seed: int = 42
+    random_revival: bool = False
 
 
 @dataclass
@@ -41,3 +42,4 @@ class Mark1Config:
 
     # Simulation
     seed: int = 42
+    add_rate_noise : bool = False

@@ -64,20 +64,6 @@ class Mark1Model:
         self.bank_liquidity = 0.0
         self.avg_price = 1.0
 
-        # Make initial employment consistent with initial production.
-        # With alpha = 1 and initial Y_i = 1, each firm should start with one worker.
-        initial_workers_needed = int(round(1.0 / self.config.alpha))
-
-        h = 0
-        for i in range(nf):
-            for _ in range(initial_workers_needed):
-                if h >= nh:
-                    break
-                self.firm_employees[i].append(h)
-                self.household_employer[h] = i
-                self.household_wage[h] = self.config.wage
-                h += 1
-
         self.history: dict[str, list[float]] = {
             "unemployment": [],
             "employment": [],
@@ -207,7 +193,13 @@ class Mark1Model:
             return
 
         leverage = (self.firm_total_debt[i] + financial_need) / (self.firm_liquidity[i] + 1e-3)
-        offered_rate = self.config.rho0 * self._g_fragility(leverage)
+
+        
+        # Optional : add noise to offered rate as in Section 2.4
+        rate_noise=1.0
+        if self.config.add_rate_noise:
+            rate_noise+=self.rng.random()
+        offered_rate = self.config.rho0 * self._g_fragility(leverage) * rate_noise
         contracted_credit = financial_need * self._credit_contraction(offered_rate)
 
         if contracted_credit > 0.0:
@@ -430,23 +422,15 @@ class Mark1Model:
         for i in bankrupt_firms:
             self._reinit_firm(i, avg_price_healthy, avg_target_prod_healthy, avg_prod_healthy)
 
-        # 7) Spread bad debt proportionally over wealth/equity to conserve money
-        # Include the owner as part of household wealth for conservation.
-        firm_equities = np.array([max(self.firm_equity(i), 0.0) for i in range(nf)], dtype=float)
-        hh_wealth = np.maximum(self.household_wealth, 0.0)
-        owner_wealth = max(self.owner_wealth, 0.0)
+        # 7) Spread bad debt proportionally over firms and households, exactly as Appendix A.
+        firm_equities = np.array([self.firm_equity(i) for i in range(nf)], dtype=float)
+        hh_wealth = self.household_wealth.copy()
 
-        total_liquidity = float(np.sum(firm_equities) + np.sum(hh_wealth) + owner_wealth)
+        total_liquidity = float(np.sum(firm_equities) + np.sum(hh_wealth))
 
         if total_liquidity > 0.0 and bad_debts < 0.0:
-            # bad_debts is negative, so this subtracts wealth/equity
-            firm_shock = bad_debts * firm_equities / total_liquidity
-            hh_shock = bad_debts * hh_wealth / total_liquidity
-            owner_shock = bad_debts * owner_wealth / total_liquidity
-
-            self.firm_liquidity += firm_shock
-            self.household_wealth += hh_shock
-            self.owner_wealth += float(owner_shock)
+            self.firm_liquidity += bad_debts * firm_equities / total_liquidity
+            self.household_wealth += bad_debts * hh_wealth / total_liquidity
 
         # 8) Update average price using realized sales
         realized_sales = np.sum(self.firm_demand)

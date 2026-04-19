@@ -282,7 +282,7 @@ class Mark0Model:
 
         return deficit, bankruptcies
 
-    def _revivals(self, unemployment: float, avg_price: float) -> tuple[float, int]:
+    def _revivals(self, unemployment: float, avg_price: float, avg_wage: float,) -> tuple[float, int]:
         """
         Revival block from Appendix B.
         Returns (added_deficit, number_of_revivals).
@@ -303,7 +303,17 @@ class Mark0Model:
             if self.rng.random() < self.config.phi:
                 self.active[i] = True
                 self.p[i] = avg_price
-                self.y[i] = self.config.mu * unemployment * self.rng.random()
+
+                # Optional: Section 4 extension: revived firms inherit the production-weighted
+                # average wage of active firms.
+                if self.config.gamma_w > 0.0:
+                    self.w[i] = avg_wage
+
+                # Optional : add noise to follow Appendix instead of main, default = False
+                if self.config.random_revival:
+                    self.y[i] = self.config.mu * unemployment * self.rng.random()
+                else:
+                    self.y[i] = self.config.mu * unemployment 
                 self.e[i] = self.w[i] * self.y[i]
                 self.d[i] = 0.0
                 self.profit[i] = 0.0
@@ -388,7 +398,8 @@ class Mark0Model:
         deficit, bankruptcies = self._defaults(healthy)
 
         # 7) Revivals
-        revival_deficit, revivals = self._revivals(unemployment, avg_price)
+        avg_wage = self.average_wage()
+        revival_deficit, revivals = self._revivals(unemployment, avg_price, avg_wage)
         deficit += revival_deficit
 
         # 8) Debt redistribution
