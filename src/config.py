@@ -14,5 +14,5 @@ class Mark0Config:
     theta: float = 2.0
     phi: float = 0.1
     f: float = 1.0
-    gamma_w: float = 0.0
+    gamma_w: float = 0.0  # 0.0 = fixed-wage basic Mark 0; >0 enables wage update extension
     seed: int = 42
