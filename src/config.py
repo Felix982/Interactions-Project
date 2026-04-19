@@ -16,3 +16,28 @@ class Mark0Config:
     f: float = 1.0
     gamma_w: float = 0.0  # 0.0 = fixed-wage basic Mark 0; >0 enables wage update extension
     seed: int = 42
+
+
+@dataclass
+class Mark1Config:
+    n_firms: int = 100
+    n_households: int = 1000
+
+    # Firm / market parameters
+    wage: float = 1.0
+    alpha: float = 1.0
+    gamma_p: float = 0.10
+    gamma_y: float = 0.10
+    markup_mu: float = 0.0
+    dividend_delta: float = 0.20
+    debt_repayment_tau: float = 0.05
+
+    # Household parameters
+    m_sampled_firms: int = 3
+    consumption_propensity: float = 0.80
+
+    # Bank / credit parameters
+    rho0: float = 0.02  # 2%
+
+    # Simulation
+    seed: int = 42
